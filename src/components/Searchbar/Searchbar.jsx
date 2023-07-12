@@ -1,4 +1,3 @@
-import React, { Component } from 'react';
 import { Wrapper } from './Searchbar.styled';
 import { SearchForm } from './SearchForm/SearchForm';
 
