@@ -9,7 +9,6 @@ import { Button } from './Button/Button';
 export class ImageGallery extends Component {
   state = {
     images: [],
-    loading: false,
     error: null,
     showModal: false,
     id: '',
@@ -22,9 +21,7 @@ export class ImageGallery extends Component {
       prevProps.imageName !== this.props.imageName ||
       prevState.page !== this.state.page
     ) {
-      if (this.state.page === 1) {
-        this.setState({ status: 'pending' });
-      }
+      this.setState({ status: 'pending' });
       const page = this.state.page;
 
       fetchImages(this.props.imageName, page)
@@ -94,7 +91,7 @@ export class ImageGallery extends Component {
 
   render() {
     const {
-      state: { status, images, showModal },
+      state: { status, images, showModal, page },
       props: { imageName },
       handleClick,
       loadMoreHandler,
@@ -102,11 +99,7 @@ export class ImageGallery extends Component {
       compareHandle,
     } = this;
 
-    if (status === 'pending') {
-      return <Loader />;
-    }
-
-    if (status === 'resolved') {
+    if (status === 'resolved' || page > 1) {
       return (
         <div>
           <List>
@@ -121,10 +114,15 @@ export class ImageGallery extends Component {
                 );
               })}
           </List>
+          {status === 'pending' && <Loader />}
           {images.length % 12 === 0 && <Button onClick={loadMoreHandler} />}
           {showModal && <Modal onClose={toggleModal} image={compareHandle} />}
         </div>
       );
+    }
+
+    if (status === 'pending') {
+      return <Loader />;
     }
 
     if (status === 'rejected') {
