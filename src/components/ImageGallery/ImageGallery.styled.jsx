@@ -12,3 +12,21 @@ export const List = styled.ul`
   margin-left: auto;
   margin-right: auto;
 `;
+
+export const Message = styled.p`
+  margin-right: auto;
+  margin-left: auto;
+  font-size: 32px;
+`;
+
+export const ErrorWrapper = styled.div`
+  margin-right: auto;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+`;
+
+export const Span = styled.span`
+  color: red;
+`;

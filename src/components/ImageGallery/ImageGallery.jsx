@@ -1,54 +1,141 @@
 import { Component } from 'react';
 import { ImageGalleryItem } from './ImageGalleryItem/ImageGalleryItem';
-import { List } from './ImageGallery.styled';
+import { List, Message, ErrorWrapper, Span } from './ImageGallery.styled';
 import { Loader } from './Loader/Loader';
-
+import errorImage from './error.jpg';
+import { fetchImages } from 'components/services/pixabay-api';
+import { Modal } from './Modal/Modal';
+import { Button } from './Button/Button';
 export class ImageGallery extends Component {
   state = {
-    images: null,
+    images: [],
     loading: false,
     error: null,
+    showModal: false,
+    id: '',
+    status: 'idle',
+    page: 1,
   };
 
-  componentDidUpdate(prevState) {
-    const URL = 'https://pixabay.com/api/1';
-    const KEY = '36952134-d669c6dacbc585856e58da105';
+  componentDidUpdate(prevProps, prevState) {
+    if (
+      prevProps.imageName !== this.props.imageName ||
+      prevState.page !== this.state.page
+    ) {
+      if (this.state.page === 1) {
+        this.setState({ status: 'pending' });
+      }
+      const page = this.state.page;
 
-    if (prevState.imageName !== this.props.imageName) {
-      this.setState({ loading: true });
-      fetch(`${URL}?key=${KEY}&q=${this.props.imageName}`)
-        .then(res => res.json())
-        .then(images => this.setState({ images }))
-        .catch(error => this.setState({ error }))
-        .finally(() => this.setState({ loading: false }));
+      fetchImages(this.props.imageName, page)
+        .then(images => {
+          if (images.total === 0) {
+            return this.setState({ page: 1, status: 'rejected' });
+          }
+
+          if (
+            prevProps.imageName !== this.props.imageName ||
+            (prevProps.imageName === this.props.imageName &&
+              this.state.page === 1)
+          ) {
+            this.setState({
+              images: images.hits,
+              status: 'resolved',
+              page: 1,
+            });
+
+            return;
+          }
+
+          if (prevProps.imageName === this.props.imageName) {
+            this.setState(
+              {
+                images: [...prevState.images, ...images.hits],
+                status: 'resolved',
+              },
+              () => {
+                window.scrollTo({
+                  top: window.scrollY + 500,
+                  behavior: 'smooth',
+                });
+              }
+            );
+
+            return;
+          }
+        })
+        .catch(error => this.setState({ page: 1, error, status: 'rejected' }));
     }
-    console.log(this.state.error);
   }
 
-  render() {
-    return (
-      <>
-        {this.state.loading ? (
-          <Loader />
-        ) : (
-          <List>
-            {this.state.images &&
-              this.state.images.hits.map(
-                ({ id, webformatURL, largeImageURL, tags }) => {
-                  return (
-                    <ImageGalleryItem
-                      key={id}
-                      id={id}
-                      smallImage={webformatURL}
-                      largeImage={largeImageURL}
-                      alt={tags}
-                    />
-                  );
-                }
-              )}
-          </List>
-        )}
-      </>
+  toggleModal = () => {
+    this.setState(({ showModal }) => ({
+      showModal: !showModal,
+    }));
+  };
+
+  handleClick = e => {
+    this.setState({ id: Number(e.currentTarget.id) });
+    this.toggleModal();
+  };
+
+  compareHandle = () => {
+    const image = this.state.images.find(
+      hit => hit.id === Number(this.state.id)
     );
+    return image.largeImageURL;
+  };
+
+  loadMoreHandler = () => {
+    this.setState(prevState => ({
+      page: prevState.page + 1,
+    }));
+  };
+
+  render() {
+    const {
+      state: { status, images, showModal },
+      props: { imageName },
+      handleClick,
+      loadMoreHandler,
+      toggleModal,
+      compareHandle,
+    } = this;
+
+    if (status === 'pending') {
+      return <Loader />;
+    }
+
+    if (status === 'resolved') {
+      return (
+        <div>
+          <List>
+            {images &&
+              images.map(image => {
+                return (
+                  <ImageGalleryItem
+                    key={image.id}
+                    image={image}
+                    onClick={handleClick}
+                  />
+                );
+              })}
+          </List>
+          {images.length % 12 === 0 && <Button onClick={loadMoreHandler} />}
+          {showModal && <Modal onClose={toggleModal} image={compareHandle} />}
+        </div>
+      );
+    }
+
+    if (status === 'rejected') {
+      return (
+        <ErrorWrapper role="alert">
+          <Message>
+            There are no images like a <Span>{imageName}</Span>
+          </Message>
+          <img src={errorImage} width="240" alt="sadcat" />
+        </ErrorWrapper>
+      );
+    }
   }
 }

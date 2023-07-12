@@ -17,12 +17,16 @@ export class SearchForm extends Component {
       return;
     }
     this.props.onSubmit(this.state.value);
-    this.setState({ value: '' });
   };
 
   render() {
+    const {
+      handleSubmit,
+      onChange,
+      state: { value },
+    } = this;
     return (
-      <Form onSubmit={this.handleSubmit}>
+      <Form onSubmit={handleSubmit}>
         <Button type="submit">
           <Label>Search</Label>
         </Button>
@@ -32,8 +36,8 @@ export class SearchForm extends Component {
           autoComplete="off"
           autoFocus
           placeholder="Search images and photos"
-          onChange={this.onChange}
-          value={this.state.value}
+          onChange={onChange}
+          value={value}
         />
       </Form>
     );
