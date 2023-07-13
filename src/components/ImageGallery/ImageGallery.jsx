@@ -6,6 +6,8 @@ import errorImage from './error.jpg';
 import { fetchImages } from 'components/services/pixabay-api';
 import { Modal } from './Modal/Modal';
 import { Button } from './Button/Button';
+import PropTypes from 'prop-types';
+
 export class ImageGallery extends Component {
   state = {
     images: [],
@@ -137,3 +139,7 @@ export class ImageGallery extends Component {
     }
   }
 }
+
+ImageGallery.propTypes = {
+  onSubmit: PropTypes.func,
+};
